@@ -1,0 +1,104 @@
+---
+title: "Machine Learning Assignment"
+author: "Afsheen Rajendran"
+date: "March 21, 2016"
+output: html_document
+---
+
+# Summary
+
+The goal of the assignment was to predict exercise quality for unknown observations 
+from the 'Qualitative Activity Recognition of Weight Lifting Exercises' study. 
+The random forest technique was able to predict with almost 100% accuracy 
+on the given testing set. 
+
+
+```{r chunk000, ref.label="chunk100", message=FALSE, echo=FALSE}
+#import libraries
+```
+
+
+# Dataset
+
+```{r chunk002, ref.label="chunk102", message=FALSE, echo=FALSE}
+#read csv file and build dataset
+```
+
+The dataset contains values for 153 variables corresponding to the readings 
+collected from sensors in the belt, arm, forearm and dumbbell.
+After removing the columns with NA or missing values, 55 variables were left. 
+
+The last column in the dataset is 'classe', which is a categorical variable. 
+It indicates the exercise quality as
+
+- Class A : exactly according to the specification
+- Class B : throwing elbows to the front 
+- Class C : lifting the dumbbell only halfway
+- Class D : lowering the dumbbell only halfway
+- Class E : throwing the hips to the front
+
+The following 54 variables will be used to predict the 'classe' variable.
+
+```{r chunk010, echo=TRUE}
+names(mydata)
+```
+
+
+
+# Appendix
+
+```{r chunk100, echo=TRUE}
+
+
+library(caret)
+library(AppliedPredictiveModeling)
+library(readr)
+library(dplyr)
+library(randomForest)
+```
+
+```{r chunk102, echo=TRUE}
+
+rawData <- read_csv("pml-training.csv")
+mydata <- rawData[, c(2, 7, 8:10, 11, 37:45, 46:48, 49, 60:68, 84:86, 102, 113:121, 122:124, 140, 151:159, 160)]
+mydata$classe <- as.factor(mydata$classe)
+mydata[, c(2:54)] <- sapply(mydata[, c(2:54)], as.numeric)
+
+```
+
+
+```{r chunk170, echo=TRUE}
+
+set.seed(11715) 
+trainIndex <- createDataPartition(mydata$classe,p=.60,list=FALSE) 
+training <- mydata[trainIndex,] 
+testing <- mydata[-trainIndex,]
+
+ldaControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
+
+ldaFit <- train(classe ~ .,data=training, method="lda",trControl=ldaControl)
+ldaPred <- predict(ldaFit, training)
+confusionMatrix(ldaPred, training$classe)
+
+```
+
+
+```{r chunk180, echo=TRUE, cache=TRUE}
+
+#rfControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
+
+#rfFit <- train(classe ~ .,data=training, method="rf",trControl=rfControl)
+#rfPred <- predict(rfFit, training)
+#confusionMatrix(rfPred, training$classe)
+
+```
+
+
+```{r chunk_192, echo=TRUE, cache=TRUE}
+#message("Out of sample error on testing data set.") 
+#rfPredTest <- predict(rfFit, testing) 
+#confusionMatrix(rfPredTest, testing$classe)
+
+```
+
+
