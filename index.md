@@ -375,6 +375,8 @@ This list of answers was entered on the associated quiz and was found to be 100%
 
 All the code snippets used above have been printed out here using the knitr 'echo=TRUE' option.
 
+### Summary
+
 
 ```r
 library(caret)
@@ -384,6 +386,8 @@ library(dplyr)
 library(randomForest)
 library(MASS)
 ```
+
+### Dataset and Feature Selection
 
 
 ```r
@@ -447,6 +451,8 @@ table(mydata [,c("user_name", "classe")])
 ##   pedro     640  505  499  469  497
 ```
 
+### Cross Validation
+
 
 ```r
 set.seed(11715) 
@@ -457,6 +463,8 @@ testing <- mydata[-trainIndex,]
 ## setup trControl param value for cross-validation using 5-folds
 trainingControl <- trainControl(method="cv", number=5, allowParallel=TRUE)
 ```
+
+### Linear Discriminant Analysis
 
 
 ```r
@@ -503,6 +511,7 @@ confusionMatrix(ldaPred, training$classe)
 ## Balanced Accuracy      0.8819   0.7977   0.8032   0.8460   0.8462
 ```
 
+### Classification Trees (Decision Trees)
 
 
 ```r
@@ -549,6 +558,7 @@ confusionMatrix(rpartPred, training$classe)
 ## Balanced Accuracy      0.7711  0.63215  0.64328   0.5000  0.72622
 ```
 
+### Random Forests
 
 
 ```r
@@ -621,6 +631,7 @@ confusionMatrix(rfPred, training$classe)
 ## Balanced Accuracy      1.0000   1.0000   1.0000   1.0000   1.0000
 ```
 
+### Out of Sample Error
 
 
 ```r
@@ -661,6 +672,8 @@ confusionMatrix(rfPredTest, testing$classe)
 ## Detection Prevalence   0.2855   0.1932   0.1755   0.1626   0.1832
 ## Balanced Accuracy      0.9990   0.9965   0.9975   0.9943   0.9974
 ```
+
+### Final Predictions
 
 
 ```r

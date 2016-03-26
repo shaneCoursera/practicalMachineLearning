@@ -194,6 +194,8 @@ This list of answers was entered on the associated quiz and was found to be 100%
 
 All the code snippets used above have been printed out here using the knitr 'echo=TRUE' option.
 
+### Summary
+
 ```{r chunk100, echo=TRUE}
 
 library(caret)
@@ -203,6 +205,8 @@ library(dplyr)
 library(randomForest)
 library(MASS)
 ```
+
+### Dataset and Feature Selection
 
 ```{r chunk102, message=FALSE,echo=TRUE}
 
@@ -227,6 +231,8 @@ table(mydata [,c("user_name", "classe")])
 
 ```
 
+### Cross Validation
+
 ```{r chunk140, echo=TRUE, cache=TRUE}
 
 set.seed(11715) 
@@ -238,6 +244,8 @@ testing <- mydata[-trainIndex,]
 trainingControl <- trainControl(method="cv", number=5, allowParallel=TRUE)
 ```
 
+### Linear Discriminant Analysis
+
 ```{r chunk152, echo=TRUE, cache=TRUE}
 ldaFit <- train(classe ~ .,data=training, method="lda", trControl=trainingControl)
 ldaPred <- predict(ldaFit, training)
@@ -247,6 +255,7 @@ ldaPred <- predict(ldaFit, training)
 confusionMatrix(ldaPred, training$classe)
 ```
 
+### Classification Trees (Decision Trees)
 
 ```{r chunk162, echo=TRUE, cache=TRUE}
 rpartFit <- train(classe ~ .,data=training, method="rpart", trControl=trainingControl)
@@ -257,6 +266,7 @@ rpartPred <- predict(rpartFit, training)
 confusionMatrix(rpartPred, training$classe)
 ```
 
+### Random Forests
 
 ```{r chunk182, echo=TRUE, cache=TRUE}
 
@@ -273,11 +283,14 @@ the optimal model the number of predictors (mtry) used was 30.
 confusionMatrix(rfPred, training$classe)
 ```
 
+### Out of Sample Error
 
 ```{r chunk190, echo=TRUE}
 rfPredTest <- predict(rfFit, testing)
 confusionMatrix(rfPredTest, testing$classe)
 ```
+
+### Final Predictions
 
 ```{r chunk199, echo=TRUE}
 rfPredFinal <- predict(rfFit, finalData) 
