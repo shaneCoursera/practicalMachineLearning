@@ -180,7 +180,7 @@ trainingControl &lt;- trainControl(method=&quot;cv&quot;,number=5,allowParallel=
 <p>The following sections will go over the accuracy of the different classification approaches used on this dataset.</p>
 <div id="linear-discriminant-analysis" class="section level2">
 <h2>Linear Discriminant Analysis</h2>
-<pre class="r"><code>ldaFit &lt;- train(classe ~ .,data=training, method=&quot;lda&quot;,trControl=trainingControl)
+<pre class="r"><code>ldaFit &lt;- train(classe ~ ., data=training, method=&quot;lda&quot;, trControl=trainingControl)
 ldaPred &lt;- predict(ldaFit, training)</code></pre>
 <p>From the confusion matrix given below, we can see that the accuracy of the model built using LDA is 75%. It is able to predict observations into class A about 86% of the time. The other classes are predicted with lesser accuracy.</p>
 <pre><code>## Confusion Matrix and Statistics
@@ -217,7 +217,7 @@ ldaPred &lt;- predict(ldaFit, training)</code></pre>
 </div>
 <div id="classification-trees-decision-trees" class="section level2">
 <h2>Classification Trees (Decision Trees)</h2>
-<pre class="r"><code>rpartFit &lt;- train(classe ~ .,data=training, method=&quot;rpart&quot;,trControl=trainingControl)
+<pre class="r"><code>rpartFit &lt;- train(classe ~ ., data=training, method=&quot;rpart&quot;, trControl=trainingControl)
 rpartPred &lt;- predict(rpartFit, training)</code></pre>
 <p>From the confusion matrix given below, we can see that the accuracy of the model built using classification is less than 50%. It is able to correctly predict ‘Class A’ 90% of the time. But the accuracy for the other classes is poor.</p>
 <pre><code>## Confusion Matrix and Statistics
@@ -254,7 +254,7 @@ rpartPred &lt;- predict(rpartFit, training)</code></pre>
 </div>
 <div id="random-forests" class="section level2">
 <h2>Random Forests</h2>
-<pre class="r"><code>rfFit &lt;- train(classe ~ .,data=training, method=&quot;rf&quot;,trControl=trainingControl)
+<pre class="r"><code>rfFit &lt;- train(classe ~ ., data=training, method=&quot;rf&quot;, trControl=trainingControl)
 rfPred &lt;- predict(rfFit, training)
 rfFit</code></pre>
 <pre><code>## Random Forest 
@@ -313,6 +313,8 @@ rfFit</code></pre>
 <div id="out-of-sample-error" class="section level1">
 <h1>Out of Sample Error</h1>
 <p>Among the different approaches on the training set, the ‘random forests’ technique was the most accurate. Using that model to classify the cases in the testing set, we obtain the accuracy as 99.55%. So the out of sample error is 0.45%.</p>
+<pre class="r"><code>rfPredTest &lt;- predict(rfFit, testing)
+confusionMatrix(rfPredTest, testing$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -348,6 +350,8 @@ rfFit</code></pre>
 <div id="final-predictions" class="section level1">
 <h1>Final Predictions</h1>
 <p>Applying the model fitted using the random forests approach on the given testing set, we get the predictions below.</p>
+<pre class="r"><code>rfPredFinal &lt;- predict(rfFit, finalData) 
+rfPredFinal</code></pre>
 <pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 <p>This list of answers was entered on the associated quiz and was found to be 100% correct.</p>
@@ -400,12 +404,12 @@ finalData[, c(2:54)] &lt;- sapply(finalData[, c(2:54)], as.numeric)</code></pre>
 ##   jeremy   1177  489  652  522  562
 ##   pedro     640  505  499  469  497</code></pre>
 <pre class="r"><code>set.seed(11715) 
-trainIndex &lt;- createDataPartition(mydata$classe,p=.60,list=FALSE) 
+trainIndex &lt;- createDataPartition(mydata$classe, p=.60, list=FALSE) 
 training &lt;- mydata[trainIndex,] 
 testing &lt;- mydata[-trainIndex,]
 
-## cross-validation using 5-folds
-trainingControl &lt;- trainControl(method=&quot;cv&quot;,number=5,allowParallel=TRUE)</code></pre>
+## setup trControl param value for cross-validation using 5-folds
+trainingControl &lt;- trainControl(method=&quot;cv&quot;, number=5, allowParallel=TRUE)</code></pre>
 <pre class="r"><code>ldaFit &lt;- train(classe ~ .,data=training, method=&quot;lda&quot;, trControl=trainingControl)
 ldaPred &lt;- predict(ldaFit, training)</code></pre>
 <pre class="r"><code>confusionMatrix(ldaPred, training$classe)</code></pre>
