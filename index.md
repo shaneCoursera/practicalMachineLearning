@@ -141,7 +141,7 @@ classification approaches used on this dataset.
 
 
 ```r
-ldaFit <- train(classe ~ .,data=training, method="lda",trControl=trainingControl)
+ldaFit <- train(classe ~ ., data=training, method="lda", trControl=trainingControl)
 ldaPred <- predict(ldaFit, training)
 ```
 
@@ -190,7 +190,7 @@ with lesser accuracy.
 
 
 ```r
-rpartFit <- train(classe ~ .,data=training, method="rpart",trControl=trainingControl)
+rpartFit <- train(classe ~ ., data=training, method="rpart", trControl=trainingControl)
 rpartPred <- predict(rpartFit, training)
 ```
 
@@ -239,7 +239,7 @@ the other classes is poor.
 
 
 ```r
-rfFit <- train(classe ~ .,data=training, method="rf",trControl=trainingControl)
+rfFit <- train(classe ~ ., data=training, method="rf", trControl=trainingControl)
 rfPred <- predict(rfFit, training)
 rfFit
 ```
@@ -314,6 +314,11 @@ was the most accurate. Using that model to classify the cases in the testing set
 we obtain the accuracy as 99.55%. So the out of sample error is 0.45%.
 
 
+```r
+rfPredTest <- predict(rfFit, testing)
+confusionMatrix(rfPredTest, testing$classe)
+```
+
 ```
 ## Confusion Matrix and Statistics
 ## 
@@ -352,6 +357,11 @@ we obtain the accuracy as 99.55%. So the out of sample error is 0.45%.
 Applying the model fitted using the random forests approach on the given testing set,
 we get the predictions below.
 
+
+```r
+rfPredFinal <- predict(rfFit, finalData) 
+rfPredFinal
+```
 
 ```
 ##  [1] B A B A A E D B A A B C B A E E A B B B
@@ -440,12 +450,12 @@ table(mydata [,c("user_name", "classe")])
 
 ```r
 set.seed(11715) 
-trainIndex <- createDataPartition(mydata$classe,p=.60,list=FALSE) 
+trainIndex <- createDataPartition(mydata$classe, p=.60, list=FALSE) 
 training <- mydata[trainIndex,] 
 testing <- mydata[-trainIndex,]
 
-## cross-validation using 5-folds
-trainingControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
+## setup trControl param value for cross-validation using 5-folds
+trainingControl <- trainControl(method="cv", number=5, allowParallel=TRUE)
 ```
 
 
