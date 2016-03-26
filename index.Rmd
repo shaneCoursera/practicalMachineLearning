@@ -1,104 +1,289 @@
 ---
-title: "Machine Learning Assignment"
+title: "Practical Machine Learning - Prediction Assignment"
 author: "Afsheen Rajendran"
-date: "March 21, 2016"
-output: html_document
+date: "March 27, 2016"
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 # Summary
 
-The goal of the assignment was to predict exercise quality for unknown observations 
+The goal of the assignment was to predict exercise quality for some observations taken 
 from the 'Qualitative Activity Recognition of Weight Lifting Exercises' study. 
-The random forest technique was able to predict with almost 100% accuracy 
-on the given testing set. 
+Different classification techniques were used on the given training set to fit models. 
+The random forest technique was able to predict with 100% accuracy 
+on the given testing set. The out of sample error on the subset of training
+set used for validation was 0.45%.
 
 
 ```{r chunk000, ref.label="chunk100", message=FALSE, echo=FALSE}
 #import libraries
 ```
 
+# Background
 
-# Dataset
+The 'Qualitative Activity Recognition of Weight Lifting Exercises' study
+(http://groupware.les.inf.puc-rio.br/har) aimed to investigate "how (well)"
+an activity was performed by a test subject. The "how (well)" investigation 
+can potentially provide useful information for a large variety of applications, 
+such as sports training.
 
-```{r chunk002, ref.label="chunk102", message=FALSE, echo=FALSE}
+Six young health participants were asked to perform one set of 10 repetitions 
+of the Unilateral Dumbbell Biceps Curl in five different fashions: 
+exactly according to the specification (Class A), throwing the elbows to the front (Class B), 
+lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) 
+and throwing the hips to the front (Class E).
+
+Based on the measurements taken during the repetitions, the investigators tried
+to predict how well the participants were performing and to provide feedback on
+improving their technique.
+
+# Dataset and Feature Selection
+
+```{r chunk002, ref.label="chunk102", message=FALSE, warning=FALSE, echo=FALSE}
 #read csv file and build dataset
 ```
 
-The dataset contains values for 153 variables corresponding to the readings 
+The dataset contains values for 160 variables corresponding to the readings 
 collected from sensors in the belt, arm, forearm and dumbbell.
 After removing the columns with NA or missing values, 55 variables were left. 
 
-The last column in the dataset is 'classe', which is a categorical variable. 
-It indicates the exercise quality as
+The process of rejection of many variables was made easier by the fact that
+those variables were NA or missing in the testing dataset given to validate
+our models. If the testing set was not provided or if a different testing set
+was provided, the feature selection process might have produced more variables
+to be analyzed.
 
-- Class A : exactly according to the specification
-- Class B : throwing elbows to the front 
-- Class C : lifting the dumbbell only halfway
-- Class D : lowering the dumbbell only halfway
-- Class E : throwing the hips to the front
-
+The last column in the dataset is 'classe', a categorical variable that takes 
+on one of the five values (class A to class E) described in the previous section.
 The following 54 variables will be used to predict the 'classe' variable.
 
 ```{r chunk010, echo=TRUE}
-names(mydata)
+names(mydata)[1:54]
 ```
 
+The following table gives a distribution of the 'classe' values
+tabulated for the different users. We see that for each user  
+most of the 'classe' values fall under 'Class A'. But there are no obvious
+patterns with respect to the other classes.
 
+```{r chunk012, echo=TRUE}
 
-# Appendix
-
-```{r chunk100, echo=TRUE}
-
-
-library(caret)
-library(AppliedPredictiveModeling)
-library(readr)
-library(dplyr)
-library(randomForest)
-```
-
-```{r chunk102, echo=TRUE}
-
-rawData <- read_csv("pml-training.csv")
-mydata <- rawData[, c(2, 7, 8:10, 11, 37:45, 46:48, 49, 60:68, 84:86, 102, 113:121, 122:124, 140, 151:159, 160)]
-mydata$classe <- as.factor(mydata$classe)
-mydata[, c(2:54)] <- sapply(mydata[, c(2:54)], as.numeric)
+table(mydata [,c("user_name", "classe")])
 
 ```
 
+# Cross Validation
 
-```{r chunk170, echo=TRUE}
+The number of observations in the given training set is 19622. But the
+number of observations in the testing set (against which the accuracy
+of any fitted model will be measured) is just 20. So we need to use
+parts of the training set itself for validation during the training
+process to avoid overfitting the data and to reduce out of sample error.
+
+K-fold cross validation will be used to designate subsets of the training set
+that will be used for validation of models before they are used on the testing set.
+It is general practice to use folds of 5 or 10. It was decided to use
+K-fold validation with k=5 for this assignment.
+
+
+```{r chunk040, echo=TRUE, cache=TRUE}
 
 set.seed(11715) 
 trainIndex <- createDataPartition(mydata$classe,p=.60,list=FALSE) 
 training <- mydata[trainIndex,] 
 testing <- mydata[-trainIndex,]
 
-ldaControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
+## cross-validation using 5-folds
+trainingControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
+```
 
-ldaFit <- train(classe ~ .,data=training, method="lda",trControl=ldaControl)
+# Model Selection
+
+Since the response variable is a qualitative (categorical) variable,
+we need to use model fitting approaches that pertain to 'classification'
+instead of 'regression'.
+
+Commonly used classification approaches are linear discriminant analysis,
+classification trees and random forests. If we are not able to achieve satisfactory
+results with these approaches, we need to try using more complex approaches
+like bagging and boosting. Complex approaches might be more flexible, but we might lose out on
+interpretability on the resulting models.
+
+The following sections will go over the accuracy of the different
+classification approaches used on this dataset.
+
+## Linear Discriminant Analysis
+
+```{r chunk052, echo=TRUE, cache=TRUE}
+ldaFit <- train(classe ~ ., data=training, method="lda", trControl=trainingControl)
 ldaPred <- predict(ldaFit, training)
+```
+
+From the confusion matrix given below, we can see that the accuracy 
+of the model built using LDA is 75%. It is able to predict observations
+into class A about 86% of the time. The other classes are predicted
+with lesser accuracy.
+
+```{r chunk054, echo=FALSE}
 confusionMatrix(ldaPred, training$classe)
-
 ```
 
 
-```{r chunk180, echo=TRUE, cache=TRUE}
+## Classification Trees (Decision Trees)
 
-#rfControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
+```{r chunk062, echo=TRUE, cache=TRUE}
+rpartFit <- train(classe ~ ., data=training, method="rpart", trControl=trainingControl)
+rpartPred <- predict(rpartFit, training)
+```
 
-#rfFit <- train(classe ~ .,data=training, method="rf",trControl=rfControl)
-#rfPred <- predict(rfFit, training)
-#confusionMatrix(rfPred, training$classe)
+From the confusion matrix given below, we can see that the accuracy 
+of the model built using classification is less than 50%. It is able
+to correctly predict 'Class A' 90% of the time. But the accuracy for 
+the other classes is poor.
 
+```{r chunk064, echo=FALSE}
+confusionMatrix(rpartPred, training$classe)
 ```
 
 
-```{r chunk_192, echo=TRUE, cache=TRUE}
-#message("Out of sample error on testing data set.") 
-#rfPredTest <- predict(rfFit, testing) 
-#confusionMatrix(rfPredTest, testing$classe)
+## Random Forests
+
+```{r chunk082, echo=TRUE, cache=TRUE}
+rfFit <- train(classe ~ ., data=training, method="rf", trControl=trainingControl)
+rfPred <- predict(rfFit, training)
+rfFit
+```
+
+The randomForest uses different number of predictors in its attempts to
+find the most accurate model. From the output above, we can see that for
+the optimal model the number of predictors (mtry) used was 30.
+
+```{r chunk084, echo=FALSE}
+confusionMatrix(rfPred, training$classe)
+```
+
+From the confusion matrix given above, we can see that the accuracy 
+of the model built using classification is 100% for all classes.
+
+# Out of Sample Error
+
+Among the different approaches on the training set, the 'random forests' technique
+was the most accurate. Using that model to classify the cases in the testing set,
+we obtain the accuracy as 99.55%. So the out of sample error is 0.45%.
+
+```{r chunk090, echo=TRUE}
+rfPredTest <- predict(rfFit, testing)
+confusionMatrix(rfPredTest, testing$classe)
+```
+
+# Final Predictions
+Applying the model fitted using the random forests approach on the given testing set,
+we get the predictions below.
+
+```{r chunk099, echo=TRUE}
+rfPredFinal <- predict(rfFit, finalData) 
+rfPredFinal
+```
+
+This list of answers was entered on the associated quiz and was found to be 100% correct.
+
+
+# Appendix
+
+All the code snippets used above have been printed out here using the knitr 'echo=TRUE' option.
+
+```{r chunk100, echo=TRUE}
+
+library(caret)
+library(AppliedPredictiveModeling)
+library(readr)
+library(dplyr)
+library(randomForest)
+library(MASS)
+```
+
+```{r chunk102, message=FALSE,echo=TRUE}
+
+rawData <- read_csv("pml-training.csv")
+mydata <- rawData[, c(2, 7, 8:10, 11, 37:45, 46:48, 49, 60:68, 84:86, 102, 113:121, 122:124, 140, 151:159, 160)]
+mydata$classe <- as.factor(mydata$classe)
+mydata[, c(2:54)] <- sapply(mydata[, c(2:54)], as.numeric)
+
+finalRawData <- read_csv("pml-testing.csv")
+finalData <- finalRawData[, c(2, 7, 8:10, 11, 37:45, 46:48, 49, 60:68, 84:86, 102, 113:121, 122:124, 140, 151:159)]
+finalData[, c(2:54)] <- sapply(finalData[, c(2:54)], as.numeric)
 
 ```
+
+```{r chunk110, echo=TRUE}
+names(mydata)[1:54]
+```
+
+```{r chunk112, echo=TRUE}
+
+table(mydata [,c("user_name", "classe")])
+
+```
+
+```{r chunk140, echo=TRUE, cache=TRUE}
+
+set.seed(11715) 
+trainIndex <- createDataPartition(mydata$classe, p=.60, list=FALSE) 
+training <- mydata[trainIndex,] 
+testing <- mydata[-trainIndex,]
+
+## setup trControl param value for cross-validation using 5-folds
+trainingControl <- trainControl(method="cv", number=5, allowParallel=TRUE)
+```
+
+```{r chunk152, echo=TRUE, cache=TRUE}
+ldaFit <- train(classe ~ .,data=training, method="lda", trControl=trainingControl)
+ldaPred <- predict(ldaFit, training)
+```
+
+```{r chunk154, echo=TRUE, cache=TRUE}
+confusionMatrix(ldaPred, training$classe)
+```
+
+
+```{r chunk162, echo=TRUE, cache=TRUE}
+rpartFit <- train(classe ~ .,data=training, method="rpart", trControl=trainingControl)
+rpartPred <- predict(rpartFit, training)
+```
+
+```{r chunk164, echo=TRUE, cache=TRUE}
+confusionMatrix(rpartPred, training$classe)
+```
+
+
+```{r chunk182, echo=TRUE, cache=TRUE}
+
+rfFit <- train(classe ~ .,data=training, method="rf", trControl=trainingControl)
+rfPred <- predict(rfFit, training)
+rfFit
+```
+
+The randomForest uses different number of predictors in its attempts to
+find the most accurate model. From the output above, we can see that for
+the optimal model the number of predictors (mtry) used was 30.
+
+```{r chunk184, echo=TRUE}
+confusionMatrix(rfPred, training$classe)
+```
+
+
+```{r chunk190, echo=TRUE}
+rfPredTest <- predict(rfFit, testing)
+confusionMatrix(rfPredTest, testing$classe)
+```
+
+```{r chunk199, echo=TRUE}
+rfPredFinal <- predict(rfFit, finalData) 
+rfPredFinal
+```
+
+
 
 
