@@ -95,7 +95,7 @@ trainIndex <- createDataPartition(mydata$classe,p=.60,list=FALSE)
 training <- mydata[trainIndex,] 
 testing <- mydata[-trainIndex,]
 
-## cross-validation using 5-folds
+## setup trControl param value for cross-validation using 5-folds
 trainingControl <- trainControl(method="cv",number=5,allowParallel=TRUE)
 ```
 
@@ -165,7 +165,7 @@ confusionMatrix(rfPred, training$classe)
 ```
 
 From the confusion matrix given above, we can see that the accuracy 
-of the model built using classification is 100% for all classes.
+of the model built using classification is 100% for all classes. 
 
 # Out of Sample Error
 
@@ -189,6 +189,14 @@ rfPredFinal
 
 This list of answers was entered on the associated quiz and was found to be 100% correct.
 
+# Conclusion
+
+Different classification approaches were tried and the 'random forests' technique was
+selected since it was found to be almost 100% accurate on the given training set. 
+Applying it to the given testing set was able to give correct predictions for 
+all observations confirming our model selection.
+
+The complete R code used for this report is given in the Appendix to help in reproducibility.
 
 # Appendix
 
